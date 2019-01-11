@@ -428,6 +428,10 @@ class Snake(VectorSprite):
         self.rect = self.image.get_rect()
         
 class Apple(VectorSprite):
+    
+    
+     def _overwrite_parameters(self):
+         self.pos=pygame.math.Vector2(random.randint(0,800), -random.randint(0,400))
      
      def create_image(self): 
          self.image = pygame.Surface((40,40))
@@ -435,7 +439,7 @@ class Apple(VectorSprite):
          self.image.set_colorkey((0,0,0))
          self.image.convert_alpha()
          self.image0 = self.image.copy()
-         sef.rect = self.image.gt_rect()
+         self.rect = self.image.get_rect()
        
 class Smoke(VectorSprite):
 
@@ -577,16 +581,19 @@ class PygView(object):
     def paint(self):
         """painting on the surface and create sprites"""
         self.allgroup =  pygame.sprite.LayeredUpdates() # for drawing
-        self.tracergroup = pygame.sprite.Group()
+        #self.tracergroup = pygame.sprite.Group()
         self.mousegroup = pygame.sprite.Group()
-        self.explosiongroup = pygame.sprite.Group()
+        #self.explosiongroup = pygame.sprite.Group()
         self.snakegroup = pygame.sprite.Group()
-        Mouse.groups = self.allgroup, self.mousegroup
+        self.applegroup = pygame.sprite.Group()
         
+        
+        Mouse.groups = self.allgroup, self.mousegroup 
         VectorSprite.groups = self.allgroup
         Flytext.groups = self.allgroup
-        Explosion.groups= self.allgroup, self.explosiongroup
+        #Explosion.groups= self.allgroup, self.explosiongroup
         Snake.groups = self.allgroup, self.snakegroup
+        Apple.groups = self.allgroup, self.applegroup
         
 
    
@@ -600,6 +607,8 @@ class PygView(object):
         self.player1 =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2))
         self.player2 =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
         self.snake1 = Snake()
+        
+        Apple()
    
    
     def run(self):
