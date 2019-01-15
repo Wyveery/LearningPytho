@@ -407,17 +407,16 @@ class VectorSprite(pygame.sprite.Sprite):
             elif self.warp_on_edge:
                 self.pos.y = 0
 
-class Spaceship(VectorSprite):
-    
-    def create_image(self):
-        self.image = pygame.Surface((50,50))
-        pygame.draw.polygon(self.image, (0,0,255), ((0,0),(50,25),(0,50),(25,25)))
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha()
-        self.image0 = self.image.copy()
-        self.rect = self.image.get_rect()
-        
+
+
 class Snake(VectorSprite):
+    
+    
+    def _overwrite_parameters(self):
+        self.kill_on_edge = True
+        self._layer = 10
+        self.pos=pygame.math.Vector2(random.randint(0,PygView.width), -random.randint(0,PygView.height))
+        self.points=0
 
     def create_image(self):
         self.image = pygame.Surface((50,50))
@@ -427,11 +426,16 @@ class Snake(VectorSprite):
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
         
+    def kill(self):
+        Flytext(715,400,"GAME OVER", dx=0, dy=0, duration=4, fontsize=300)
+        VectorSprite.kill(self)
+        
 class Apple(VectorSprite):
     
     
      def _overwrite_parameters(self):
-         self.pos=pygame.math.Vector2(random.randint(0,800), -random.randint(0,400))
+         self._layer = 1
+         self.pos=pygame.math.Vector2(random.randint(0,1430), -random.randint(0,800))
      
      def create_image(self): 
          self.image = pygame.Surface((40,40))
@@ -597,17 +601,8 @@ class PygView(object):
         
 
    
-        # ------ player1,2,3: mouse, keyboard, joystick ---
-        self.mouse1 = Mouse(control="mouse", color=(255,0,0))
-        self.mouse2 = Mouse(control='keyboard1', color=(255,255,0))
-        self.mouse3 = Mouse(control="keyboard2", color=(255,0,255))
-        self.mouse4 = Mouse(control="joystick1", color=(255,128,255))
-        self.mouse5 = Mouse(control="joystick2", color=(255,255,255))
 
-        self.player1 =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2,-PygView.height/2))
-        self.player2 =  Spaceship(warp_on_edge=True, pos=pygame.math.Vector2(PygView.width/2+100,-PygView.height/2))
         self.snake1 = Snake()
-        
         Apple()
    
    
@@ -620,6 +615,7 @@ class PygView(object):
         gameOver = False
         exittime = 0
         while running:
+            pygame.display.set_caption("Points: {}".format(self.snake1.points))
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
@@ -644,103 +640,57 @@ class PygView(object):
                         # create a new vector (a copy, but not the same, as the pos vector of spaceship)
                         p = pygame.math.Vector2(self.player1.pos.x, self.player1.pos.y)
                         a = self.player1.angle
-                        # launch rocktet not from middle of spaceship, but from it's nose (rightmost point)
-                        # we know that from middle of spaceship to right edge ("nose") is 25 pixel
                         t = pygame.math.Vector2(25,0)
                         t.rotate_ip(self.player1.angle)
-                        Rocket(pos=p+t, move=v, angle=a)
+                        
                 
-                    # ---- stop movement for self.player1 -----
-                    #if event.key == pygame.K_r:
-                    #    self.player1.move *= 0.1 # remove 90% of movement
-                    
+
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
             
-            # ------ move indicator for self.player1 -----
-            pygame.draw.circle(self.screen, (0,255,0), (100,100), 100,1)
-            glitter = (0, random.randint(128, 255), 0)
-            pygame.draw.line(self.screen, glitter, (100,100), 
-                            (100 + self.player1.move.x, 100 - self.player1.move.y))
             
-            
-            # --- line from eck to mouse ---
-            pygame.draw.line(self.screen, (random.randint(200,250),0,0), (self.player1.pos.x, -self.player1.pos.y), (self.mouse1.x, self.mouse1.y))
 
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             
 
-            # if pressed_keys[pygame.K_LSHIFT]:
-                # paint range circles for cannons
-            if pressed_keys[pygame.K_a]:
-                #self.player1.rotate(3)
-                if self.snake1.move != pygame.math.Vector2(130,0):
-                    self.snake1.move = pygame.math.Vector2(-130,0)
+            if pressed_keys[pygame.K_a]:               
+                if self.snake1.move != pygame.math.Vector2(250,0):
+                    self.snake1.move = pygame.math.Vector2(-250,0)
                 
             if pressed_keys[pygame.K_d]:
-                if self.snake1.move != pygame.math.Vector2(-130,0):
-                    self.snake1.move = pygame.math.Vector2(130,0)
-                #self.player1.rotate(-3)
+                if self.snake1.move != pygame.math.Vector2(-250,0):
+                    self.snake1.move = pygame.math.Vector2(250,0)
+                    
             if pressed_keys[pygame.K_w]:
-                if self.snake1.move != pygame.math.Vector2(0,-130):
-                    self.snake1.move = pygame.math.Vector2(0,130)
-                #v = pygame.math.Vector2(1,0)
-                #v.rotate_ip(self.player1.angle)
-                #self.player1.move += v
+                if self.snake1.move != pygame.math.Vector2(0,-250):
+                    self.snake1.move = pygame.math.Vector2(0,250)
+                    
             if pressed_keys[pygame.K_s]:
-                if self.snake1.move != pygame.math.Vector2(0,130):
-                    self.snake1.move = pygame.math.Vector2(0,-130)
-                #v = pygame.math.Vector2(1,0)
-                #v.rotate_ip(self.player1.angle)
-                #self.player1.move += -v
+                if self.snake1.move != pygame.math.Vector2(0,250):
+                    self.snake1.move = pygame.math.Vector2(0,-250)
     
             
             # ------ mouse handler ------
-            left,middle,right = pygame.mouse.get_pressed()
+            #left,middle,right = pygame.mouse.get_pressed()
             #if oldleft and not left:
             #    self.launchRocket(pygame.mouse.get_pos())
             #if right:
             #    self.launchRocket(pygame.mouse.get_pos())
-            oldleft, oldmiddle, oldright = left, middle, right
+            #oldleft, oldmiddle, oldright = left, middle, right
 
-            # ------ joystick handler -------
-            mouses = [self.mouse4, self.mouse5]
-            for number, j in enumerate(self.joysticks):
-                if number == 0:
-                   x = j.get_axis(0)
-                   y = j.get_axis(1)
-                   mouses[number].x += x * 20 # *2 
-                   mouses[number].y += y * 20 # *2 
-                   buttons = j.get_numbuttons()
-                   for b in range(buttons):
-                       pushed = j.get_button( b )
-                       #if b == 0 and pushed:
-                       #        self.launchRocket((mouses[number].x, mouses[number].y))
-                       #elif b == 1 and pushed:
-                       #    if not self.mouse4.pushed: 
-                       #        self.launchRocket((mouses[number].x, mouses[number].y))
-                       #        mouses[number] = True
-                       #elif b == 1 and not pushed:
-                       #    mouses[number] = False
-            pos1 = pygame.math.Vector2(pygame.mouse.get_pos())
-            pos2 = self.mouse2.rect.center
-            pos3 = self.mouse3.rect.center
-            
-            # write text below sprites
-            write(self.screen, "FPS: {:8.3}".format(
-                self.clock.get_fps() ), x=10, y=10)
+
             self.allgroup.update(seconds)
 
-            # --------- collision detection between target and Explosion -----
-            #for e in self.explosiongroup:
-            #    crashgroup = pygame.sprite.spritecollide(e, self.targetgroup,
-            #                 False, pygame.sprite.collide_circle)
-            #    for t in crashgroup:
-            #        t.hitpoints -= e.damage
-            #        if random.random() < 0.5:
-            #            Fire(pos = t.pos, max_age=3, bossnumber=t.number)
+            # --------- collision detection between snake and apple ----------
+            for s in self.snakegroup:
+                 crashgroup = pygame.sprite.spritecollide(s,self.applegroup,
+                              False, pygame.sprite.collide_mask)
+                 for a in crashgroup:
+                     a.kill()
+                     Apple()
+                     s.points += 1
 
             
             # ----------- clear, draw , update, flip -----------------
