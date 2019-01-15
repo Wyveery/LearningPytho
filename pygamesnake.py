@@ -40,39 +40,6 @@ def write(background, text, x=50, y=150, color=(0,0,0),
         else:      # topleft corner is x,y
             background.blit(surface, (x,y))
 
-def elastic_collision(sprite1, sprite2):
-        """elasitc collision between 2 VectorSprites (calculated as disc's).
-           The function alters the dx and dy movement vectors of both sprites.
-           The sprites need the property .mass, .radius, pos.x pos.y, move.x, move.y
-           by Leonard Michlmayr"""
-        if sprite1.static and sprite2.static:
-            return 
-        dirx = sprite1.pos.x - sprite2.pos.x
-        diry = sprite1.pos.y - sprite2.pos.y
-        sumofmasses = sprite1.mass + sprite2.mass
-        sx = (sprite1.move.x * sprite1.mass + sprite2.move.x * sprite2.mass) / sumofmasses
-        sy = (sprite1.move.y * sprite1.mass + sprite2.move.y * sprite2.mass) / sumofmasses
-        bdxs = sprite2.move.x - sx
-        bdys = sprite2.move.y - sy
-        cbdxs = sprite1.move.x - sx
-        cbdys = sprite1.move.y - sy
-        distancesquare = dirx * dirx + diry * diry
-        if distancesquare == 0:
-            dirx = random.randint(0,11) - 5.5
-            diry = random.randint(0,11) - 5.5
-            distancesquare = dirx * dirx + diry * diry
-        dp = (bdxs * dirx + bdys * diry) # scalar product
-        dp /= distancesquare # divide by distance * distance.
-        cdp = (cbdxs * dirx + cbdys * diry)
-        cdp /= distancesquare
-        if dp > 0:
-            if not sprite2.static:
-                sprite2.move.x -= 2 * dirx * dp
-                sprite2.move.y -= 2 * diry * dp
-            if not sprite1.static:
-                sprite1.move.x -= 2 * dirx * cdp
-                sprite1.move.y -= 2 * diry * cdp
-
 class Flytext(pygame.sprite.Sprite):
     def __init__(self, x, y, text="hallo", color=(255, 0, 0),
                  dx=0, dy=-50, duration=2, acceleration_factor = 1.0, delay = 0, fontsize=22):
@@ -104,120 +71,6 @@ class Flytext(pygame.sprite.Sprite):
             if self.time > self.duration:
                 self.kill()      # remove Sprite from screen and from groups
 
-class Mouse(pygame.sprite.Sprite):
-    def __init__(self, radius = 50, color=(255,0,0), x=320, y=240,
-                    startx=100,starty=100, control="mouse", ):
-        """create a (black) surface and paint a blue Mouse on it"""
-        self._layer=10
-        pygame.sprite.Sprite.__init__(self,self.groups)
-        self.radius = radius
-        self.color = color
-        self.startx=startx
-        self.starty=starty
-        self.x = x
-        self.y = y
-        self.dx = 0
-        self.dy = 0
-        self.r = color[0]
-        self.g = color[1]
-        self.b = color[2]
-        self.delta = -10
-        self.age = 0
-        self.pos = pygame.mouse.get_pos()
-        self.move = 0
-        self.tail=[]
-        self.create_image()
-        self.rect = self.image.get_rect()
-        self.control = control # "mouse" "keyboard1" "keyboard2"
-        self.pushed = False
-
-    def create_image(self):
-
-        self.image = pygame.surface.Surface((self.radius*0.5, self.radius*0.5))
-        delta1 = 12.5
-        delta2 = 25
-        w = self.radius*0.5 / 100.0
-        h = self.radius*0.5 / 100.0
-        # pointing down / up
-        for y in (0,2,4):
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (35*w,0+y),(50*w,15*h+y),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (50*w,15*h+y),(65*w,0+y),2)
-    
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (35*w,100*h-y),(50*w,85*h-y),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (50*w,85*h-y),(65*w,100*h-y),2)
-        # pointing right / left                 
-        for x in (0,2,4):
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (0+x,35*h),(15*w+x,50*h),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (15*w+x,50*h),(0+x,65*h),2)
-            
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (100*w-x,35*h),(85*w-x,50*h),2)
-            pygame.draw.line(self.image,(self.r-delta2,self.g,self.b),
-                         (85*w-x,50*h),(100*w-x,65*h),2)
-        self.image.set_colorkey((0,0,0))
-        self.rect=self.image.get_rect()
-        self.rect.center = self.x, self.y
-
-    def update(self, seconds):
-        if self.control == "mouse":
-            self.x, self.y = pygame.mouse.get_pos()
-        elif self.control == "keyboard1":
-            pressed = pygame.key.get_pressed()
-            if pressed[pygame.K_LSHIFT]:
-                delta = 2
-            else:
-                delta = 9
-            if pressed[pygame.K_w]:
-                self.y -= delta
-            if pressed[pygame.K_s]:
-                self.y += delta
-            if pressed[pygame.K_a]:
-                self.x -= delta
-            if pressed[pygame.K_d]:
-                self.x += delta
-        elif self.control == "keyboard2":
-            pressed = pygame.key.get_pressed()
-            if pressed[pygame.K_RSHIFT]:
-                delta = 2
-            else:
-                delta = 9
-            if pressed[pygame.K_UP]:
-                self.y -= delta
-            if pressed[pygame.K_DOWN]:
-                self.y += delta
-            if pressed[pygame.K_LEFT]:
-                self.x -= delta
-            if pressed[pygame.K_RIGHT]:
-                self.x += delta
-        elif self.control == "joystick1":
-            pass
-        elif self.control == "joystick2":
-            pass
-        if self.x < 0:
-            self.x = 0
-        elif self.x > PygView.width:
-            self.x = PygView.width
-        if self.y < 0:
-            self.y = 0
-        elif self.y > PygView.height:
-            self.y = PygView.height
-        self.tail.insert(0,(self.x,self.y))
-        self.tail = self.tail[:128]
-        self.rect.center = self.x, self.y
-        self.r += self.delta   # self.r can take the values from 255 to 101
-        if self.r < 151:
-            self.r = 151
-            self.delta = 10
-        if self.r > 255:
-            self.r = 255
-            self.delta = -10
-        self.create_image()
 
 class VectorSprite(pygame.sprite.Sprite):
     """base class for sprites. this class inherits from pygames sprite class"""
@@ -444,16 +297,6 @@ class Apple(VectorSprite):
          self.image.convert_alpha()
          self.image0 = self.image.copy()
          self.rect = self.image.get_rect()
-       
-class Smoke(VectorSprite):
-
-    def create_image(self):
-        self.image = pygame.Surface((50,50))
-        pygame.draw.circle(self.image, self.color, (25,25),
-                           int(self.age*3))
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha()
-        self.rect = self.image.get_rect()
 
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -466,61 +309,6 @@ class Smoke(VectorSprite):
         c = min(255,c)
         self.color=(c,c,c)
 
-
-class Explosion(VectorSprite):
-
-    def _overwrite_parameters(self):
-        self._layer = 2
-
-    def create_image(self):
-        self.image=pygame.Surface((self.radius*2, self.radius*2))
-        pygame.draw.circle(self.image, (197, 37,  37),(self.radius, self.radius),  self.radius, 0)
-        r, g, b = self.color
-        for rad in range(5,66, 5):
-            if self.radius > rad:
-                if r != 0 and r != 255:
-                   r1 = (random.randint(rad-10,rad) + r) % 255
-                else:
-                    r1 = r
-                if g != 0 and g != 255:
-                    g1 = (random.randint(rad-10,rad) + g) % 255
-                else:
-                    g1 = g
-                if b != 0 and b != 255:
-                    b1 = (random.randint(rad-10,rad) + b) % 255
-                else:
-                    b1 = b
-                pygame.draw.circle(self.image, (r1,g1,b1), (self.radius, self.radius), self.radius-rad, 0)
-        self.image.set_colorkey((0,0,0))
-        self.rect= self.image.get_rect()
-
-    def update(self,seconds):
-         VectorSprite.update(self, seconds)
-         self.create_image()
-         self.rect=self.image.get_rect()
-         self.rect.center=(self.pos.x, self.pos.y)
-         self.radius+=1
-
-class Rocket(VectorSprite):
-
-
-    def _overwrite_parameters(self):
-        self._layer = 1 
-        self.kill_on_edge = True
-
-    def create_image(self):
-        #self.image = PygView.images["bullet"]
-        self.image = pygame.Surface((10,5))
-        #pygame.draw.rect(self.image, (255,255,0), (0,2, 8,3),0)
-        #pygame.draw.line(self.image, (220,220,0), (0,3),(10,3),2)
-        pygame.draw.polygon(self.image, (255,255,0), 
-                            [(0,0), (7,0), (9,2), (9,3), (7, 4), (0,4)]
-                           ) 
-        #self.image.fill((255,255,0))
-        self.image.set_colorkey((0,0,0))
-        self.image.convert_alpha()
-        self.image0 = self.image.copy()
-        self.rect = self.image.get_rect()
 
 
 class PygView(object):
@@ -714,3 +502,4 @@ class PygView(object):
 
 if __name__ == '__main__':
     PygView(1430,800).run() # try PygView(800,600).run()
+    
