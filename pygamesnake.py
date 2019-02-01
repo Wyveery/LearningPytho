@@ -5,7 +5,6 @@ contact: see http://spielend-programmieren.at/de:kontakt
 license: gpl, see http://www.gnu.org/licenses/gpl-3.0.de.html
 download: https://github.com/horstjens/feuerwerk/blob/master/vectortemplate2d.py
 idea: clean python3/pygame template using pygame.math.vector2
-
 """
 import pygame
 #import math
@@ -273,16 +272,18 @@ class Snake(VectorSprite):
         self.tail  = []
         #self.color = (0,200,0)
         self.direction = "right"
-        self.turn_duration = 0.00003051757
+        self.turn_duration = 0.00000000000001
         self.time_of_last_move = 0
 
     def create_image(self):
-        self.image = pygame.Surface((50,50))
-        self.image.fill(self.color)
-        self.image.set_colorkey((0,0,0))
+        #self.image = pygame.Surface((50,50))
+        #self.image.fill(self.color)
+        #self.image.set_colorkey((0,0,0))
+        self.image = PygView.snakeimage
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
+        self.speed = 18
         
     def update(self, seconds):
         VectorSprite.update(self, seconds)
@@ -293,13 +294,13 @@ class Snake(VectorSprite):
         print(self.age, self.time_of_last_move)
         if self.age >  self.time_of_last_move + self.turn_duration:
             if self.direction == "right":
-                v = pygame.math.Vector2(10,0)
+                v = pygame.math.Vector2(self.speed,0)
             elif self.direction == "left":
-                v = pygame.math.Vector2(-10,0)
+                v = pygame.math.Vector2(-self.speed,0)
             elif self.direction == "down":
-                v = pygame.math.Vector2(0,-10)
+                v = pygame.math.Vector2(0,-self.speed)
             else:
-                v = pygame.math.Vector2(0,10)
+                v = pygame.math.Vector2(0,self.speed)
             self.pos += v
             
             #----Tail----
@@ -323,7 +324,7 @@ class Tail(VectorSprite):
     def _overwrite_parameters(self):
         self.kill_on_edge = True
         self._layer= 9
-        self.color = (0,255,0)
+        self.color = (0,220,0)
         self.max_age=1/10
 
     def create_image(self):
@@ -404,11 +405,13 @@ class PygView(object):
         self.joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         for j in self.joysticks:
             j.init()
+        self.loadsprites()
         self.paint()
         #self.loadbackground()
         self.background = pygame.Surface(self.screen.get_size()).convert()
         self.background.fill((0,0,255)) # fill background white
-            
+        
+               
     def loadbackground(self):
         
         try:
@@ -422,6 +425,11 @@ class PygView(object):
         self.background = pygame.transform.scale(self.background,
                           (PygView.width,PygView.height))
         self.background.convert()
+        
+      
+    def loadsprites(self):
+        PygView.snakeimage = pygame.image.load(os.path.join("data", "SnakeHead.png"))
+        PygView.snakeimage = pygame.transform.scale(PygView.snakeimage, (80,80))
         
 
     def paint(self):
@@ -439,7 +447,7 @@ class PygView(object):
         
 
    
-        x = 300
+        x = PygView.width //2
         y = PygView.height // 2
         self.snake1 = Snake(pos=pygame.math.Vector2(x,-y), color=(0,200,0))
         Apple()
@@ -553,13 +561,13 @@ class PygView(object):
 
             
             # --- Martins verbesserter Mousetail -----
-            for mouse in self.mousegroup:
-                if len(mouse.tail)>2:
-                    for a in range(1,len(mouse.tail)):
-                        r,g,b = mouse.color
-                        pygame.draw.line(self.screen,(r-a,g,b),
-                                     mouse.tail[a-1],
-                                     mouse.tail[a],10-a*10//10)
+            #for mouse in self.mousegroup:
+            #    if len(mouse.tail)>2:
+            #        for a in range(1,len(mouse.tail)):
+            #            r,g,b = mouse.color
+            #            pygame.draw.line(self.screen,(r-a,g,b),
+            #                         mouse.tail[a-1],
+            #                         mouse.tail[a],10-a*10//10)
             
             # -------- next frame -------------
             pygame.display.flip()
