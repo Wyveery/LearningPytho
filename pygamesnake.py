@@ -317,6 +317,7 @@ class Snake(VectorSprite):
     def kill(self):
         Flytext(715,400,"GAME OVER", dx=0, dy=0, duration=4, fontsize=300)
         VectorSprite.kill(self)
+        Viewer.gameOver = True
 
 
 class Tail(VectorSprite):
@@ -369,6 +370,8 @@ class Apple(VectorSprite):
 class Viewer(object):
     width = 0
     height = 0
+    gameOver = False
+
 
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
@@ -479,17 +482,7 @@ class Viewer(object):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    # ---- shooting rockets for player1 ----
-                    if event.key == pygame.K_TAB:
-                        v = pygame.math.Vector2(100,0)
-                        v.rotate_ip(self.player1.angle) 
-                        v += self.player1.move # adding speed of spaceship to rocket
-                        # create a new vector (a copy, but not the same, as the pos vector of spaceship)
-                        p = pygame.math.Vector2(self.player1.pos.x, self.player1.pos.y)
-                        a = self.player1.angle
-                        t = pygame.math.Vector2(25,0)
-                        t.rotate_ip(self.player1.angle)
-                        
+
                 
 
    
@@ -503,43 +496,44 @@ class Viewer(object):
                  
             write(self.screen, "Time played (m:s) {}:{}".format(m,s), 150, 20, color=(0,0,0))
             
-
+            if Viewer.gameOver:
+                write(self.screen, "Game Over", Viewer.width // 2,Viewer.height // 2, fontsize = 230, center = True ) # simon
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             
-            
-            if pressed_keys[pygame.K_a]: 
-                if self.snake1.direction   != "right":
-                #    self.snake1.pos += pygame.math.Vector2(-10,0)
-                    self.snake1.direction="left"
-                #    self.snake1.time_of_last_move = self.snake1.age                  
-                #if self.snake1.move != pygame.math.Vector2(200,0):
-                #    self.snake1.move = pygame.math.Vector2(-200,0)
-                
-            if pressed_keys[pygame.K_d]:
-                if self.snake1.direction != "left":
-                #    self.snake1.pos += pygame.math.Vector2(10,0)
-                    self.snake1.direction="right"
-                #    self.snake1.time_of_last_move = self.snake1.age
-                #if self.snake1.move != pygame.math.Vector2(-200,0):
-                #    self.snake1.move = pygame.math.Vector2(200,0)
+            if not Viewer.gameOver:
+                if pressed_keys[pygame.K_a]: 
+                    if self.snake1.direction   != "right":
+                    #    self.snake1.pos += pygame.math.Vector2(-10,0)
+                        self.snake1.direction="left"
+                    #    self.snake1.time_of_last_move = self.snake1.age                  
+                    #if self.snake1.move != pygame.math.Vector2(200,0):
+                    #    self.snake1.move = pygame.math.Vector2(-200,0)
                     
-            if pressed_keys[pygame.K_w]:
-                if self.snake1.direction != "down":
-                #   self.snake1.pos += pygame.math.Vector2(0,10)
-                   self.snake1.direction="up"
-                #   self.snake1.time_of_last_move = self.snake1.age
-                #if self.snake1.move != pygame.math.Vector2(0,-200):
-                #    self.snake1.move = pygame.math.Vector2(0,200)
-                    
-            if pressed_keys[pygame.K_s]:
-                if self.snake1.direction != "up":
-                #    self.snake1.pos += pygame.math.Vector2(0,-10)
-                    self.snake1.direction="down"
-                #    self.snake1.time_of_last_move = self.snake1.age
-                #if self.snake1.move != pygame.math.Vector2(0,200):
-                #    self.snake1.move = pygame.math.Vector2(0,-200)
-    
+                if pressed_keys[pygame.K_d]:
+                    if self.snake1.direction != "left":
+                    #    self.snake1.pos += pygame.math.Vector2(10,0)
+                        self.snake1.direction="right"
+                    #    self.snake1.time_of_last_move = self.snake1.age
+                    #if self.snake1.move != pygame.math.Vector2(-200,0):
+                    #    self.snake1.move = pygame.math.Vector2(200,0)
+                        
+                if pressed_keys[pygame.K_w]:
+                    if self.snake1.direction != "down":
+                    #   self.snake1.pos += pygame.math.Vector2(0,10)
+                       self.snake1.direction="up"
+                    #   self.snake1.time_of_last_move = self.snake1.age
+                    #if self.snake1.move != pygame.math.Vector2(0,-200):
+                    #    self.snake1.move = pygame.math.Vector2(0,200)
+                        
+                if pressed_keys[pygame.K_s]:
+                    if self.snake1.direction != "up":
+                    #    self.snake1.pos += pygame.math.Vector2(0,-10)
+                        self.snake1.direction="down"
+                    #    self.snake1.time_of_last_move = self.snake1.age
+                    #if self.snake1.move != pygame.math.Vector2(0,200):
+                    #    self.snake1.move = pygame.math.Vector2(0,-200)
+        
             
             # ------ mouse handler ------
             #left,middle,right = pygame.mouse.get_pressed()
@@ -563,17 +557,10 @@ class Viewer(object):
 
             
             # ----------- clear, draw , update, flip -----------------
-            self.allgroup.draw(self.screen)
-
+            if not Viewer.gameOver:
+                self.allgroup.draw(self.screen)
+             
             
-            # --- Martins verbesserter Mousetail -----
-            #for mouse in self.mousegroup:
-            #    if len(mouse.tail)>2:
-            #        for a in range(1,len(mouse.tail)):
-            #            r,g,b = mouse.color
-            #            pygame.draw.line(self.screen,(r-a,g,b),
-            #                         mouse.tail[a-1],
-            #                         mouse.tail[a],10-a*10//10)
             
             # -------- next frame -------------
             pygame.display.flip()
