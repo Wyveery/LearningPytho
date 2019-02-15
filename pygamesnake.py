@@ -106,7 +106,7 @@ class VectorSprite(pygame.sprite.Sprite):
         if "static" not in kwargs:
             self.static = False
         if "pos" not in kwargs:
-            self.pos = pygame.math.Vector2(random.randint(0, PygView.width),-50)
+            self.pos = pygame.math.Vector2(random.randint(0, Viewer.width),-50)
         if "move" not in kwargs:
             self.move = pygame.math.Vector2(0,0)
         if "radius" not in kwargs:
@@ -229,7 +229,7 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.x = 0
                 self.move.x *= -1
             elif self.warp_on_edge:
-                self.pos.x = PygView.width 
+                self.pos.x = Viewer.width 
         # -------- upper edge -----
         if self.pos.y  > 0:
             if self.kill_on_edge:
@@ -238,23 +238,23 @@ class VectorSprite(pygame.sprite.Sprite):
                 self.pos.y = 0
                 self.move.y *= -1
             elif self.warp_on_edge:
-                self.pos.y = -PygView.height
+                self.pos.y = -Viewer.height
         # -------- right edge -----                
-        if self.pos.x  > PygView.width:
+        if self.pos.x  > Viewer.width:
             if self.kill_on_edge:
                 self.kill()
             elif self.bounce_on_edge:
-                self.pos.x = PygView.width
+                self.pos.x = Viewer.width
                 self.move.x *= -1
             elif self.warp_on_edge:
                 self.pos.x = 0
         # --------- lower edge ------------
-        if self.pos.y   < -PygView.height:
+        if self.pos.y   < -Viewer.height:
             if self.kill_on_edge:
                 self.hitpoints = 0
                 self.kill()
             elif self.bounce_on_edge:
-                self.pos.y = -PygView.height
+                self.pos.y = -Viewer.height
                 self.move.y *= -1
             elif self.warp_on_edge:
                 self.pos.y = 0
@@ -267,7 +267,7 @@ class Snake(VectorSprite):
     def _overwrite_parameters(self):
         self.kill_on_edge = True
         self._layer= 10
-        self.pos=pygame.math.Vector2(random.randint(0,PygView.width), -random.randint(0,PygView.height))
+        self.pos=pygame.math.Vector2(random.randint(0,Viewer.width), -random.randint(0,Viewer.height))
         self.points=0
         self.tail  = []
         #self.color = (0,200,0)
@@ -279,7 +279,7 @@ class Snake(VectorSprite):
         #self.image = pygame.Surface((50,50))
         #self.image.fill(self.color)
         #self.image.set_colorkey((0,0,0))
-        self.image = PygView.snakeimage
+        self.image = Viewer.snakeimage
         self.image.convert_alpha()
         self.image0 = self.image.copy()
         self.rect = self.image.get_rect()
@@ -366,7 +366,7 @@ class Apple(VectorSprite):
 
 
 
-class PygView(object):
+class Viewer(object):
     width = 0
     height = 0
 
@@ -374,8 +374,8 @@ class PygView(object):
         """Initialize pygame, window, background, font,...
            default arguments """
         pygame.init()
-        PygView.width = width    # make global readable
-        PygView.height = height
+        Viewer.width = width    # make global readable
+        Viewer.height = height
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.DOUBLEBUF)
         self.background = pygame.Surface(self.screen.get_size()).convert()
         self.background.fill((255,255,255)) # fill background white
@@ -396,9 +396,9 @@ class PygView(object):
         #    print("Error: no .jpg files found")
         #    pygame.quit
         #    sys.exit()
-        PygView.bombchance = 0.015
-        PygView.rocketchance = 0.001
-        PygView.wave = 0
+        Viewer.bombchance = 0.015
+        Viewer.rocketchance = 0.001
+        Viewer.wave = 0
         self.age = 0
         # ------ joysticks ----
         pygame.joystick.init()
@@ -416,20 +416,20 @@ class PygView(object):
         
         try:
             self.background = pygame.image.load(os.path.join("data",
-                 self.backgroundfilenames[PygView.wave %
+                 self.backgroundfilenames[Viewer.wave %
                  len(self.backgroundfilenames)]))
         except:
             self.background = pygame.Surface(self.screen.get_size()).convert()
             self.background.fill((255,255,255)) # fill background white
             
         self.background = pygame.transform.scale(self.background,
-                          (PygView.width,PygView.height))
+                          (Viewer.width,Viewer.height))
         self.background.convert()
         
       
     def loadsprites(self):
-        PygView.snakeimage = pygame.image.load(os.path.join("data", "SnakeHead.png"))
-        PygView.snakeimage = pygame.transform.scale(PygView.snakeimage, (80,80))
+        Viewer.snakeimage = pygame.image.load(os.path.join("data", "SnakeHead.png"))
+        Viewer.snakeimage = pygame.transform.scale(Viewer.snakeimage, (80,80))
         
 
     def paint(self):
@@ -447,8 +447,8 @@ class PygView(object):
         
 
    
-        x = PygView.width //2
-        y = PygView.height // 2
+        x = Viewer.width //2
+        y = Viewer.height // 2
         self.snake1 = Snake(pos=pygame.math.Vector2(x,-y), color=(0,200,0))
         Apple()
    
@@ -496,6 +496,12 @@ class PygView(object):
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
             
+            #--------- write on screen ---
+            write(self.screen, "Points {}".format(self.snake1.points), 20, 20, color=(0,0,0))
+            m = int(self.playtime // 60)
+            s = int(self.playtime % 60)
+                 
+            write(self.screen, "Time played (m:s) {}:{}".format(m,s), 150, 20, color=(0,0,0))
             
 
             # ------------ pressed keys ------
@@ -503,7 +509,7 @@ class PygView(object):
             
             
             if pressed_keys[pygame.K_a]: 
-                if self.snake1.direction != "right":
+                if self.snake1.direction   != "right":
                 #    self.snake1.pos += pygame.math.Vector2(-10,0)
                     self.snake1.direction="left"
                 #    self.snake1.time_of_last_move = self.snake1.age                  
@@ -576,4 +582,4 @@ class PygView(object):
         pygame.quit()
 
 if __name__ == '__main__':
-    PygView(1430,800).run() # try PygView(800,600).run()
+    Viewer(1430,800).run() # try Viewer(800,600).run()
