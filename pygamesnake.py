@@ -13,6 +13,7 @@ import os
 import time
 #import operator
 import math
+
 #import vectorclass2d as v
 #import textscroller_vertical as ts
 #import subprocess
@@ -315,7 +316,7 @@ class Snake(VectorSprite):
                          
                 
     def kill(self):
-        Flytext(715,400,"GAME OVER", dx=0, dy=0, duration=4, fontsize=300)
+        #Flytext(715,400,"GAME OVER", dx=0, dy=0, duration=4, fontsize=300)
         VectorSprite.kill(self)
         Viewer.gameOver = True
 
@@ -371,7 +372,10 @@ class Viewer(object):
     width = 0
     height = 0
     gameOver = False
-
+    menu = []
+    mainmenu = ["play", "settings", "credits", "quit"]
+    settingsmenu = ["back", "easy", "normal", "hard"]
+    
 
     def __init__(self, width=640, height=400, fps=30):
         """Initialize pygame, window, background, font,...
@@ -433,7 +437,15 @@ class Viewer(object):
     def loadsprites(self):
         Viewer.snakeimage = pygame.image.load(os.path.join("data", "SnakeHead.png"))
         Viewer.snakeimage = pygame.transform.scale(Viewer.snakeimage, (80,80))
-        
+    
+    def create_snake_and_apple(self):
+        for thing in self.allgroup:
+            thing.kill()  
+        x = Viewer.width //2
+        y = Viewer.height // 2
+        self.snake1 = Snake(pos=pygame.math.Vector2(x,-y), color=(0,200,0))
+        Apple()
+       
 
     def paint(self):
         """painting on the surface and create sprites"""
@@ -441,37 +453,108 @@ class Viewer(object):
         self.mousegroup = pygame.sprite.Group()
         self.snakegroup = pygame.sprite.Group()
         self.applegroup = pygame.sprite.Group()
-        
+        self.flytextgroup = pygame.sprite.Group()
         
         VectorSprite.groups = self.allgroup
-        Flytext.groups = self.allgroup
+        Flytext.groups = self.allgroup, self.flytextgroup
         Snake.groups = self.allgroup, self.snakegroup
         Apple.groups = self.allgroup, self.applegroup
-        
+        self.create_snake_and_apple()
 
+    
    
-        x = Viewer.width //2
-        y = Viewer.height // 2
-        self.snake1 = Snake(pos=pygame.math.Vector2(x,-y), color=(0,200,0))
-        Apple()
-   
-   
+    def menurun(self):
+        """The menu mainloop"""
+        running = True
+        Viewer.menu = Viewer.mainmenu[:]
+        cursor = 0
+        while running:
+            pygame.display.set_caption("Points: {}".format(self.snake1.points))
+            milliseconds = self.clock.tick(self.fps) #
+            seconds = milliseconds / 1000
+            #self.playtime += seconds
+            #Game over?
+            #if not gameOver:
+            # -------- events ------
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return -1
+                # ------- pressed and released key ------
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        return -1
+                    if event.key == pygame.K_DOWN:
+                        cursor += 1
+                        if cursor > len(Viewer.menu)-1:
+                            cursor = len(Viewer.menu)-1
+                    if event.key == pygame.K_UP:
+                        cursor -= 1
+                        if cursor < 0:
+                            cursor = 0
+                    if event.key == pygame.K_RETURN:
+                        text = Viewer.menu[cursor]
+                        if text == "quit":
+                            return -1
+                        if text == "play":
+                            return
+                        if text == "settings":
+                            Viewer.menu = Viewer.settingsmenu[:]
+                        if text == "back":
+                            Viewer.menu = Viewer.mainmenu[:]
+                        if text == "credits":
+                            Flytext(x=Viewer.width//2,y=Viewer.height//2.75-40,fontsize=250,dx=0,dy=-10,duration=5,text="Game by")             
+                            Flytext(x=Viewer.width//2,y=Viewer.height//2,fontsize=250,dx=0,dy=-10,duration=5,text="Simon Nguyen") 
+            # delete everything on screen
+            self.screen.blit(self.background, (0, 0))
+            
+            #--------- write on screen ---
+            write(self.screen, "Points {}".format(self.snake1.points), 20, 20, color=(0,0,0))
+            m = int(self.playtime // 60)
+            s = int(self.playtime % 60)
+                 
+            write(self.screen, "Time played (m:s) {}:{}".format(m,s), 150, 20, color=(0,0,0))
+            
+            
+            # ------ paint menu ...
+            
+            for y, item in enumerate(Viewer.menu):
+                write(self.screen, item, 200, 100+20*y)
+                
+            # --- cursor 
+            
+            write(self.screen, "-->", 100, 100+ 20* cursor)
+               
+            # ------------ pressed keys ------
+            #pressed_keys = pygame.key.get_pressed()
+            
+            self.flytextgroup.update(seconds)
+
+            # ----------- clear, draw , update, flip -----------------
+            #if not Viewer.gameOver:
+            self.allgroup.draw(self.screen)
+                 
+            # -------- next frame -------------
+            pygame.display.flip()
+        #-----------------------------------------------------
+        
     def run(self):
         """The mainloop"""
         running = True
         pygame.mouse.set_visible(False)
         oldleft, oldmiddle, oldright  = False, False, False
         self.snipertarget = None
-        gameOver = False
         exittime = 0
+        result = self.menurun()
+        if result == -1:
+            running = False
         while running:
             pygame.display.set_caption("Points: {}".format(self.snake1.points))
             milliseconds = self.clock.tick(self.fps) #
             seconds = milliseconds / 1000
             self.playtime += seconds
-            if gameOver:
-                if self.playtime > exittime:
-                    break
+            #if game0ver:
+            #    if self.playtime > exittime:
+            #        break
             #Game over?
             #if not gameOver:
             # -------- events ------
@@ -481,10 +564,13 @@ class Viewer(object):
                 # ------- pressed and released key ------
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        running = False
-
+                        result = self.menurun()
+                        if result == -1:
+                            running = False
+                    
                 
 
+   
    
             # delete everything on screen
             self.screen.blit(self.background, (0, 0))
@@ -497,7 +583,18 @@ class Viewer(object):
             write(self.screen, "Time played (m:s) {}:{}".format(m,s), 150, 20, color=(0,0,0))
             
             if Viewer.gameOver:
-                write(self.screen, "Game Over", Viewer.width // 2,Viewer.height // 2, fontsize = 230, center = True ) # simon
+                
+                #write(self.screen, "Game Over", Viewer.width // 2,Viewer.height // 2, fontsize = 230, center = True ) # simon
+                Flytext(x=Viewer.width//2,y=Viewer.height//2,text="Game Over",dx=0,dy=0,duration=4, fontsize=300)
+                
+                result = self.menurun()
+                if result == -1:
+                    running = False
+                    break
+                # --- new game 
+                Viewer.gameOver = False
+                self.create_snake_and_apple()
+                
             # ------------ pressed keys ------
             pressed_keys = pygame.key.get_pressed()
             
